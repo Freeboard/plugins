@@ -18,22 +18,22 @@ Installation
 <script type="text/javascript">
 	head.js(
 			...
-			"/js/freeboard/plugins/plugin_node.js",
+			"js/freeboard/plugins/plugin_node.js",
 ```
 
 Testing
 --------------
 
-You can test this plugin by running the node.js **sample server** in your terminal:
+1. You can test this plugin by running the node.js **sample server** (located in the ```/datasources/plugin_nodejs_sample/``` folder) with this command:
 
 ```js
 node plugin_node_sample_server.js
 ```
 
-Open the **sample freeboard.io client** with your browser:
+2. Open the **sample freeboard.io client** with your browser, e.g. Chrome, located at:
 
 ```js
-/plugin_node_sample_client.html
+/datasources/plugin_nodejs_sample/plugin_node_sample_client.html
 ```
 
 Requirements
@@ -48,9 +48,9 @@ To run the sample server make sure you have following dependencies installed:
 Screenshots
 --------------
 
-In this screenshot, you can see the sample server and dashboard running with multiple clients and receiving data in real-time.
+In this screenshot, you can see the sample server and dashboard running with multiple clients receiving data in real-time.
 
-![Image](plugin_node_sample_example.png)
+![Image](/datasources/plugin_nodejs_sample/plugin_node_sample_example.png)
 
 License
 ----
