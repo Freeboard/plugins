@@ -48,7 +48,7 @@ Screenshots
 
 In this screenshot, you can see the sample server and dashboard running with multiple clients receiving data in real-time.
 
-![Image](/datasources/plugin_nodejs_sample/plugin_node_sample_example.png)
+![Image](/datasources/plugin_nodejs_sample/plugin_node_sample_screenshot.png)
 
 License
 ----
