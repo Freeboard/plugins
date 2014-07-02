@@ -10,7 +10,7 @@ This is a datasource plugin to connect freeboard.io dashboards to real-time node
 Installation
 --------------
 
-1. Place the file ```/datasources/plugin_node.js``` in  ```/js/freeboard/plugins``` of your freeboard.io installation.
+1. Place the file ```/datasources/plugin_node.js``` in  yours freeboard.io plugins folder (```freeboard-master/js/freeboard/plugins```).
 
 2. Edit your freeboard.io main HTML file and add the plugin to the header:
 
@@ -24,17 +24,15 @@ Installation
 Testing
 --------------
 
-1. You can test this plugin by running the node.js **sample server** (located in the ```/datasources/plugin_nodejs_sample/``` folder) with this command:
+1. Follow the steps of the installation section to place the ```/datasources/plugin_node.js``` file in yours freeboard.io plugins folder (```freeboard-master/js/freeboard/plugins```).
+
+2. You can run the **sample node.js server** (located at ```/datasources/plugin_nodejs_sample/plugin_node_sample_server.js```) with this command:
 
 ```js
 node plugin_node_sample_server.js
 ```
 
-2. Open the **sample freeboard.io client** with your browser, e.g. Chrome, located at:
-
-```js
-/datasources/plugin_nodejs_sample/plugin_node_sample_client.html
-```
+3. Place and open the **sample freeboard.io dashboard** (located at ```/datasources/plugin_nodejs_sample/plugin_node_sample_client.html```) in yours freeboard.io root folder (```freeboard-master/```).
 
 Requirements
 --------------
@@ -42,8 +40,8 @@ Requirements
 To run the sample server make sure you have following dependencies installed:
 
 1. [Node.js](http://nodejs.org)
-2. [Socket.io](http://socket.io)
 
+2. [Socket.io](http://socket.io)
 
 Screenshots
 --------------
