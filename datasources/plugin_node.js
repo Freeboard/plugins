@@ -42,24 +42,25 @@
 			self.url = url;
 			self.socket = io.connect(self.url);
 
-			// Join the rooms
-			self.socket.on('connect', function() {
-				console.info("Connecting to Node.js at: %s", self.url);
+			self.socket.on('connect_error', function(object) {
+				console.error("It was not possible to connect to Node.js at: %s", self.url);
 			});
 			
 			// Join the rooms
-			_.each(rooms, function(roomConfig) {
-				var roomName = roomConfig.roomName;
-				var roomEvent = roomConfig.roomEvent;
+			self.socket.on('connect', function() {
+				
+				console.info("Connecting to Node.js at: %s", self.url);
+				
+				// Join the rooms
+				_.each(rooms, function(roomConfig) {
+					var roomName = roomConfig.roomName;
+					var roomEvent = roomConfig.roomEvent;
 
-				if (!_.isUndefined(roomName) && !_.isUndefined(roomEvent)) {
-					joinRoom(roomName, roomEvent);
-				}
+					if (!_.isUndefined(roomName) && !_.isUndefined(roomEvent)) {
+						joinRoom(roomName, roomEvent);
+					}
 
-			});
-
-			self.socket.on('connect_error', function(object) {
-				console.error("It was not possible to connect to Node.js at: %s", self.url);
+				});
 			});
 			
 			self.socket.on('reconnect_error', function(object) {
@@ -109,6 +110,7 @@
 			self.newMessageCallback = function(message) {
 				return;
 			};
+			disconnecFromServer();
 		};
 
 		this.onSettingsChanged = function(newSettings) {
