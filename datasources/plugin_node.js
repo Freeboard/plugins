@@ -84,8 +84,6 @@
 
 		function initializeDataSource() {
 
-			console.info("Subscribing to event: %s", currentSettings.eventName);
-
 			// Reset connection to server
 			disconnecFromServer();
 			connectToServer(currentSettings.url, currentSettings.rooms);
@@ -93,8 +91,12 @@
 			// Subscribe to the events
 			var newEventName = currentSettings.eventName;
 			self.newMessageCallback = onNewMessageHandler;
-			self.socket.on(newEventName, function(message) {
-				self.newMessageCallback(message);
+			_.each(currentSettings.events, function(eventConfig) {
+				var event = eventConfig.eventName;
+				console.info("Subscribing to event: %s", event);
+				self.socket.on(event, function(message) {
+					self.newMessageCallback(message);
+				});
 			});
 
 		}
@@ -111,7 +113,8 @@
 			self.newMessageCallback = function(message) {
 				return;
 			};
-			disconnecFromServer();
+			// Dont disconnect from server
+			// Another datasource may be still using the same socket
 		};
 
 		this.onSettingsChanged = function(newSettings) {
@@ -134,10 +137,15 @@
 							type : "text"
 						},
 						{
-							name : "eventName",
+							name : "events",
 							display_name : "Events",
 							description : "The name of the events you want this datasource to subscribe to.",
-							type : "text"
+							type : "array",
+							settings : [ {
+								name : "eventName",
+								display_name : "Event",
+								type : "text"
+							} ]
 						},
 						{
 							name : "rooms",
