@@ -44,9 +44,11 @@
 
 			// Join the rooms
 			self.socket.on('connect', function() {
-				
 				console.info("Connecting to Node.js at: %s", self.url);
-				
+				if (!self.socket.connections) {
+					self.socket.connections = 0;
+				}
+				self.socket.connections = self.socket.connections + 1;
 			});
 			
 			// Join the rooms
@@ -74,18 +76,21 @@
 			
 		}
 
-		function disconnecFromServer() {
+		function disconnectFromServer() {
 			// Disconnect any older socket
 			if (self.socket) {
-				self.socket.disconnect();
-				console.info("Disconnected from Node.js: %s", self.url);
+				self.socket.connections--;
+				// Discard socket if no other connection is using it
+				if (self.socket.connections==0) {
+					self.socket.disconnect();
+					console.info("Disconnected from Node.js: %s", self.url);
+				}
 			}
 		}
 
 		function initializeDataSource() {
-
 			// Reset connection to server
-			disconnecFromServer();
+			disconnectFromServer();
 			connectToServer(currentSettings.url, currentSettings.rooms);
 
 			// Subscribe to the events
@@ -98,7 +103,6 @@
 					self.newMessageCallback(message);
 				});
 			});
-
 		}
 
 		initializeDataSource();
@@ -113,8 +117,7 @@
 			self.newMessageCallback = function(message) {
 				return;
 			};
-			// Dont disconnect from server
-			// Another datasource may be still using the same socket
+			disconnectFromServer();
 		};
 
 		this.onSettingsChanged = function(newSettings) {
