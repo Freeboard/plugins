@@ -10,37 +10,13 @@
 
 (function() {
 	
-	var connectionCounter = 0;
-
 	var nodeJSDatasource = function(settings, updateCallback) {
 
 		var self = this,
-			connectionId = 0,
 			currentSettings = settings,
 			url,
 			socket,
 			newMessageCallback;
-		
-		function setConnectionDead() {
-			if (self.socket && self.socket.connectionsAlive) {
-				if (self.socket.connectionsAlive.indexOf(self.connectionId)>-1){
-					self.socket.connectionsAlive.splice(self.socket.connectionsAlive.indexOf(self.connectionId), 1);
-				}
-			}
-		}
-		
-		function setConnectionAlive() {
-			if (self.socket) {
-				// Initialization
-				if (!self.socket.connectionsAlive) {
-					self.socket.connectionsAlive = [];
-				}
-				// Check if alive connection have been saved
-				if (!_.contains(self.socket.connectionsAlive, self.connectionId)) {
-					self.socket.connectionsAlive.push(self.connectionId);
-				}
-			}
-		}
 
 		function onNewMessageHandler(message) {
 			var objdata = JSON.parse(message);
@@ -49,7 +25,6 @@
 			} else {
 				updateCallback(data);
 			}
-			setConnectionAlive();
 		}
 
 		function joinRoom(roomName, roomEvent) {
@@ -59,30 +34,17 @@
 			console.info("Joining room '%s' with event '%s'", roomName, roomEvent);
 		}
 
-		function checkDiscardSocket() {
-			// Disconnect not active socket
+		function discardSocket() {
+			// Disconnect datasource websocket
 			if (self.socket) {
-				// Discard socket if no other connection are using it
-				if (self.socket.connectionsAlive.length==0 && self.socket.connected) {
-					self.socket.disconnect();
-					console.info("Disconnected from Node.js server at: %s", self.url);
-				}
+				self.socket.disconnect();
 			}
 		}
 		
 		function connectToServer(url, rooms) {
 			// Establish connection with server
 			self.url = url;
-			self.socket = io.connect(self.url);
-			
-			// Re-connect old disconnect socket
-			if (self.socket) {
-				if (self.socket.connectionsAlive) {
-					if (self.socket.disconnected) {
-						self.socket = io.connect(self.url,{'forceNew':true});
-					}
-				}
-			}
+			self.socket = io.connect(self.url,{'forceNew':true});
 
 			// Join the rooms
 			self.socket.on('connect', function() {
@@ -110,8 +72,7 @@
 			
 			self.socket.on('reconnect_failed', function(object) {
 				console.error("Re-connection to Node.js failed at: %s", self.url);
-				setConnectionDead();
-				checkDiscardSocket();
+				discardSocket();
 			});
 			
 		}
@@ -119,7 +80,7 @@
 
 		function initializeDataSource() {
 			// Reset connection to server
-			checkDiscardSocket();
+			discardSocket();
 			connectToServer(currentSettings.url, currentSettings.rooms);
 
 			// Subscribe to the events
@@ -144,9 +105,7 @@
 			self.newMessageCallback = function(message) {
 				return;
 			};
-			// Set connection has dead
-			setConnectionDead();
-			checkDiscardSocket();
+			discardSocket();
 		};
 
 		this.onSettingsChanged = function(newSettings) {
@@ -154,8 +113,6 @@
 			initializeDataSource();
 		};
 		
-		// Main
-		self.connectionId = connectionCounter++;
 		initializeDataSource();
 	};
 
