@@ -9,25 +9,47 @@
 // └────────────────────────────────────────────────────────────────────┘ \\
 
 (function() {
+	
+	var connectionCounter = 0;
 
 	var nodeJSDatasource = function(settings, updateCallback) {
 
 		var self = this,
+			connectionId = 0,
 			currentSettings = settings,
 			url,
 			socket,
 			newMessageCallback;
+		
+		function setConnectionDead() {
+			if (self.socket && self.socket.connectionsAlive) {
+				if (self.socket.connectionsAlive.indexOf(self.connectionId)>-1){
+					self.socket.connectionsAlive.splice(self.socket.connectionsAlive.indexOf(self.connectionId), 1);
+				}
+			}
+		}
+		
+		function setConnectionAlive() {
+			if (self.socket) {
+				// Initialization
+				if (!self.socket.connectionsAlive) {
+					self.socket.connectionsAlive = [];
+				}
+				// Check if alive connection have been saved
+				if (!_.contains(self.socket.connectionsAlive, self.connectionId)) {
+					self.socket.connectionsAlive.push(self.connectionId);
+				}
+			}
+		}
 
 		function onNewMessageHandler(message) {
-
 			var objdata = JSON.parse(message);
-
 			if (typeof objdata == "object") {
 				updateCallback(objdata);
 			} else {
 				updateCallback(data);
 			}
-
+			setConnectionAlive();
 		}
 
 		function joinRoom(roomName, roomEvent) {
@@ -37,18 +59,34 @@
 			console.info("Joining room '%s' with event '%s'", roomName, roomEvent);
 		}
 
+		function checkDiscardSocket() {
+			// Disconnect not active socket
+			if (self.socket) {
+				// Discard socket if no other connection are using it
+				if (self.socket.connectionsAlive.length==0 && self.socket.connected) {
+					self.socket.disconnect();
+					console.info("Disconnected from Node.js server at: %s", self.url);
+				}
+			}
+		}
+		
 		function connectToServer(url, rooms) {
 			// Establish connection with server
 			self.url = url;
 			self.socket = io.connect(self.url);
+			
+			// Re-connect old disconnect socket
+			if (self.socket) {
+				if (self.socket.connectionsAlive) {
+					if (self.socket.disconnected) {
+						self.socket = io.connect(self.url,{'forceNew':true});
+					}
+				}
+			}
 
 			// Join the rooms
 			self.socket.on('connect', function() {
 				console.info("Connecting to Node.js at: %s", self.url);
-				if (!self.socket.connections) {
-					self.socket.connections = 0;
-				}
-				self.socket.connections = self.socket.connections + 1;
 			});
 			
 			// Join the rooms
@@ -71,26 +109,17 @@
 			});
 			
 			self.socket.on('reconnect_failed', function(object) {
-				console.error("Stopping re-connecting to Node.js at: %s", self.url);
+				console.error("Re-connection to Node.js failed at: %s", self.url);
+				setConnectionDead();
+				checkDiscardSocket();
 			});
 			
 		}
 
-		function disconnectFromServer() {
-			// Disconnect any older socket
-			if (self.socket) {
-				self.socket.connections--;
-				// Discard socket if no other connection is using it
-				if (self.socket.connections==0) {
-					self.socket.disconnect();
-					console.info("Disconnected from Node.js: %s", self.url);
-				}
-			}
-		}
 
 		function initializeDataSource() {
 			// Reset connection to server
-			disconnectFromServer();
+			checkDiscardSocket();
 			connectToServer(currentSettings.url, currentSettings.rooms);
 
 			// Subscribe to the events
@@ -105,8 +134,6 @@
 			});
 		}
 
-		initializeDataSource();
-
 		this.updateNow = function() {
 			// Just seat back, relax and wait for incoming events
 			return;
@@ -117,13 +144,19 @@
 			self.newMessageCallback = function(message) {
 				return;
 			};
-			disconnectFromServer();
+			// Set connection has dead
+			setConnectionDead();
+			checkDiscardSocket();
 		};
 
 		this.onSettingsChanged = function(newSettings) {
 			currentSettings = newSettings;
 			initializeDataSource();
 		};
+		
+		// Main
+		self.connectionId = connectionCounter++;
+		initializeDataSource();
 	};
 
 	freeboard
