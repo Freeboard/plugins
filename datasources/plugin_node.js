@@ -9,27 +9,22 @@
 // └────────────────────────────────────────────────────────────────────┘ \\
 
 (function() {
-
+	
 	var nodeJSDatasource = function(settings, updateCallback) {
 
-		var self = this;
-		var currentSettings = settings;
-		var url;
-		var socket;
-		var newMessageCallback;
+		var self = this,
+			currentSettings = settings,
+			url,
+			socket,
+			newMessageCallback;
 
 		function onNewMessageHandler(message) {
-
-			console.debug("Message received %s", message);
-
 			var objdata = JSON.parse(message);
-
 			if (typeof objdata == "object") {
 				updateCallback(objdata);
 			} else {
 				updateCallback(data);
 			}
-
 		}
 
 		function joinRoom(roomName, roomEvent) {
@@ -39,28 +34,34 @@
 			console.info("Joining room '%s' with event '%s'", roomName, roomEvent);
 		}
 
+		function discardSocket() {
+			// Disconnect datasource websocket
+			if (self.socket) {
+				self.socket.disconnect();
+			}
+		}
+		
 		function connectToServer(url, rooms) {
 			// Establish connection with server
 			self.url = url;
-			self.socket = io.connect(self.url);
+			self.socket = io.connect(self.url,{'forceNew':true});
 
 			// Join the rooms
 			self.socket.on('connect', function() {
-				
 				console.info("Connecting to Node.js at: %s", self.url);
-				
-				// Join the rooms
-				_.each(rooms, function(roomConfig) {
-					var roomName = roomConfig.roomName;
-					var roomEvent = roomConfig.roomEvent;
-
-					if (!_.isUndefined(roomName) && !_.isUndefined(roomEvent)) {
-						joinRoom(roomName, roomEvent);
-					}
-
-				});
 			});
+			
+			// Join the rooms
+			_.each(rooms, function(roomConfig) {
+				var roomName = roomConfig.roomName;
+				var roomEvent = roomConfig.roomEvent;
 
+				if (!_.isUndefined(roomName) && !_.isUndefined(roomEvent)) {
+					joinRoom(roomName, roomEvent);
+				}
+
+			});
+			
 			self.socket.on('connect_error', function(object) {
 				console.error("It was not possible to connect to Node.js at: %s", self.url);
 			});
@@ -70,37 +71,29 @@
 			});
 			
 			self.socket.on('reconnect_failed', function(object) {
-				console.error("Stopping re-connecting to Node.js at: %s", self.url);
+				console.error("Re-connection to Node.js failed at: %s", self.url);
+				discardSocket();
 			});
 			
 		}
 
-		function disconnecFromServer() {
-			// Disconnect any older socket
-			if (self.socket) {
-				self.socket.disconnect();
-				console.info("Disconnected from Node.js: %s", self.url);
-			}
-		}
 
 		function initializeDataSource() {
-
-			console.info("Subscribing to event: %s", currentSettings.eventName);
-
 			// Reset connection to server
-			disconnecFromServer();
+			discardSocket();
 			connectToServer(currentSettings.url, currentSettings.rooms);
 
 			// Subscribe to the events
 			var newEventName = currentSettings.eventName;
 			self.newMessageCallback = onNewMessageHandler;
-			self.socket.on(newEventName, function(message) {
-				self.newMessageCallback(message);
+			_.each(currentSettings.events, function(eventConfig) {
+				var event = eventConfig.eventName;
+				console.info("Subscribing to event: %s", event);
+				self.socket.on(event, function(message) {
+					self.newMessageCallback(message);
+				});
 			});
-
 		}
-
-		initializeDataSource();
 
 		this.updateNow = function() {
 			// Just seat back, relax and wait for incoming events
@@ -112,12 +105,15 @@
 			self.newMessageCallback = function(message) {
 				return;
 			};
+			discardSocket();
 		};
 
 		this.onSettingsChanged = function(newSettings) {
 			currentSettings = newSettings;
 			initializeDataSource();
 		};
+		
+		initializeDataSource();
 	};
 
 	freeboard
@@ -134,10 +130,15 @@
 							type : "text"
 						},
 						{
-							name : "eventName",
+							name : "events",
 							display_name : "Events",
 							description : "The name of the events you want this datasource to subscribe to.",
-							type : "text"
+							type : "array",
+							settings : [ {
+								name : "eventName",
+								display_name : "Event",
+								type : "text"
+							} ]
 						},
 						{
 							name : "rooms",
