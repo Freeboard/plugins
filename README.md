@@ -11,4 +11,6 @@ Plugins for Freeboard.io
 
 - handlebars (author widgets using [handlebars templates](http://handlebarsjs.com))
   - see [repo](https://github.com/jritsema/freeboard-handlebars) for more info
-  
+
+- reactjs (author widgets using [react](http://reactjs.com))
+  - see [starter template](https://github.com/jritsema/freeboard-react-widget) to make things easier
