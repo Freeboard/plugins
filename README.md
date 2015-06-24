@@ -10,7 +10,11 @@ Plugins for Freeboard.io
 ### widget plugins
 
 - handlebars (author widgets using [handlebars templates](http://handlebarsjs.com))
+  - see [starter template](https://github.com/jritsema/freeboard-handlebars-widget) to make things easier
   - see [repo](https://github.com/jritsema/freeboard-handlebars) for more info
 
 - reactjs (author widgets using [react](http://reactjs.com))
   - see [starter template](https://github.com/jritsema/freeboard-react-widget) to make things easier
+
+- jqplot (author graph/chart based widgets using [jqPlot](http://www.jqplot.com))
+  - see [repo](https://github.com/jritsema/freeboard-jqplot) for more info
