@@ -73,7 +73,11 @@
             "type": "node_js",
             "settings": {
                 "url": "http://localhost:8989/shows",
-                "eventName": "house.stark.jon",
+                "events": [
+                    {
+                        "eventName": "house.stark.jon"
+                    }
+                ],
                 "rooms": [
                     {
                         "roomName": "got",
@@ -87,7 +91,11 @@
             "type": "node_js",
             "settings": {
                 "url": "http://localhost:8989/shows",
-                "eventName": "house.lannister.tyrion",
+                "events": [
+                    {
+                        "eventName": "house.lannister.tyrion"
+                    }
+                ],
                 "rooms": [
                     {
                         "roomName": "got",
